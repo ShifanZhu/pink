@@ -40,8 +40,8 @@ if __name__ == "__main__":
     )
 
     q_ref = np.zeros(robot.nq)
-    q_ref[2] = 1.72
-    q_ref[6] = 1.0
+    # q_ref[2] = 1.72
+    # q_ref[6] = 1.0
     q_ref[8] = 1.0
     q_ref[9] = 0.2
     q_ref[17] = -1
@@ -54,12 +54,12 @@ if __name__ == "__main__":
         ),
         "left_contact": FrameTask(
             "left_contact",
-            position_cost=[0.1, 0.0, 0.1],  # [cost] / [m]
+            position_cost=[10.1, 10.0, 10.1],  # [cost] / [m]
             orientation_cost=0.0,  # [cost] / [rad]
         ),
         "right_contact": FrameTask(
             "right_contact",
-            position_cost=[0.1, 0.0, 0.1],  # [cost] / [m]
+            position_cost=[10.1, 10.0, 10.1],  # [cost] / [m]
             orientation_cost=0.0,  # [cost] / [rad]
         ),
         "posture": PostureTask(
@@ -73,10 +73,10 @@ if __name__ == "__main__":
         if type(task) is FrameTask:
             task.set_target_from_configuration(configuration)
 
-    # tasks["posture"].set_target(
-    #     custom_configuration_vector(robot, left_knee=0.2, right_knee=-0.2)
-    # )
-    tasks["posture"].set_target_from_configuration(configuration)
+    tasks["posture"].set_target(
+        custom_configuration_vector(robot, jRightKnee_rotz=0.2, jLeftKnee_rotz=0.2)
+    )
+    # tasks["posture"].set_target_from_configuration(configuration)
 
     left_contact_target = configuration.get_transform_frame_to_world(
         "left_contact"
