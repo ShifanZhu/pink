@@ -9,6 +9,7 @@
 import numpy as np
 import pinocchio as pin
 import qpsolvers
+import time
 
 import meshcat_shapes
 import pink
@@ -51,9 +52,10 @@ if __name__ == "__main__":
     q_ref = np.zeros(robot.nq)
     # q_ref[2] = 1.72
     # q_ref[6] = 1.0
-    q_ref[8] = 1.0
-    q_ref[9] = 0.2
-    q_ref[17] = -1
+    # q_ref[8] = 1.0
+    # q_ref[9] = 0.2
+    # q_ref[10] = 0.1
+    # q_ref[17] = -1
 
     tasks = {
         "base": FrameTask(
@@ -118,6 +120,7 @@ if __name__ == "__main__":
     rate = RateLimiter(frequency=200.0, warn=False)
     dt = rate.period
     t = 0.0  # [s]
+    time.sleep(1)
     while True:
         # Update task targets
         left_contact_target.translation[2] += (0.1 * np.sin(t) * dt)
