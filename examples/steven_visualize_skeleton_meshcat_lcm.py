@@ -18,6 +18,94 @@ from pink.tasks import FrameTask, PostureTask
 from pink.utils import custom_configuration_vector
 from pink.visualization import start_meshcat_visualizer
 
+import lcm
+
+from skeleton_lcm import skeleton_lcm
+
+link_map = {
+    "PELVIS": "base",
+    "SPINE_NAVEL": "LowerTrunk",
+    "SPINE_CHEST": "UpperTrunk",
+    "NECK": "Neck",
+    "HEAD": "Head",
+    "CLAVICLE_LEFT": "LeftShoulder",
+    "SHOULDER_LEFT": "LeftUpperArm",
+    "ELBOW_LEFT": "LeftForeArm",
+    "WRIST_LEFT": "LeftHand",
+    "HAND_LEFT": "LeftHandCOM",
+    "HIP_LEFT": "LeftUpperLeg",
+    "KNEE_LEFT": "LeftLowerLeg",
+    "ANKLE_LEFT": "LeftFoot",
+    "FOOT_LEFT": "LeftToe",
+    "CLAVICLE_RIGHT": "RightShoulder",
+    "SHOULDER_RIGHT": "RightUpperArm",
+    "ELBOW_RIGHT": "RightForeArm",
+    "WRIST_RIGHT": "RightHand",
+    "HAND_RIGHT": "RightHandCOM",
+    "HIP_RIGHT": "RightUpperLeg",
+    "KNEE_RIGHT": "RightLowerLeg",
+    "ANKLE_RIGHT": "RightFoot",
+    "FOOT_RIGHT": "RightToe",
+}
+
+joints = [
+    "PELVIS",
+    "SPINE_NAVEL",
+    "SPINE_CHEST",
+    "NECK",
+    "CLAVICLE_LEFT",
+    "SHOULDER_LEFT",
+    "ELBOW_LEFT",
+    "WRIST_LEFT",
+    "HAND_LEFT",
+    "HANDTIP_LEFT",
+    "THUMB_LEFT",
+    "CLAVICLE_RIGHT",
+    "SHOULDER_RIGHT",
+    "ELBOW_RIGHT",
+    "WRIST_RIGHT",
+    "HAND_RIGHT",
+    "HANDTIP_RIGHT",
+    "THUMB_RIGHT",
+    "HIP_LEFT",
+    "KNEE_LEFT",
+    "ANKLE_LEFT",
+    "FOOT_LEFT",
+    "HIP_RIGHT",
+    "KNEE_RIGHT",
+    "ANKLE_RIGHT",
+    "FOOT_RIGHT",
+    "HEAD",
+    "NOSE",
+    "EYE_LEFT",
+    "EAR_LEFT",
+    "EYE_RIGHT",
+    "EAR_RIGHT"
+]
+
+def read_skeleton_frames_lcm(filename):
+    frames = {}
+
+    log = lcm.EventLog(filename, "r")
+    
+    for i, event in enumerate(log):
+        data = skeleton_lcm.decode(event.data)
+        print()
+
+        print(len(data.joint_positions), len(data.joint_orientations))
+
+        frames[i] = {
+            joints[idx]: data.joint_positions[idx] + data.joint_orientations[idx]
+            for idx in range(len(joints))
+        }
+
+    for i, frame in frames.items():
+        frame["Timestamp"] = i * 0.033
+
+    print(frames)
+
+    return list(frames.values())
+
 def read_skeleton_frames(filename):
     frames = []
 
@@ -63,32 +151,6 @@ except ModuleNotFoundError:
         "Examples need robot_descriptions, "
         "try `[conda|pip] install robot_descriptions`"
     )
-
-link_map = {
-    "PELVIS": "base",
-    "SPINE_NAVEL": "LowerTrunk",
-    "SPINE_CHEST": "UpperTrunk",
-    "NECK": "Neck",
-    "HEAD": "Head",
-    "CLAVICLE_LEFT": "LeftShoulder",
-    "SHOULDER_LEFT": "LeftUpperArm",
-    "ELBOW_LEFT": "LeftForeArm",
-    "WRIST_LEFT": "LeftHand",
-    "HAND_LEFT": "LeftHandCOM",
-    "HIP_LEFT": "LeftUpperLeg",
-    "KNEE_LEFT": "LeftLowerLeg",
-    "ANKLE_LEFT": "LeftFoot",
-    "FOOT_LEFT": "LeftToe",
-    "CLAVICLE_RIGHT": "RightShoulder",
-    "SHOULDER_RIGHT": "RightUpperArm",
-    "ELBOW_RIGHT": "RightForeArm",
-    "WRIST_RIGHT": "RightHand",
-    "HAND_RIGHT": "RightHandCOM",
-    "HIP_RIGHT": "RightUpperLeg",
-    "KNEE_RIGHT": "RightLowerLeg",
-    "ANKLE_RIGHT": "RightFoot",
-    "FOOT_RIGHT": "RightToe",
-}
 
 if __name__ == "__main__":
     last_timestamp = None
@@ -148,7 +210,10 @@ if __name__ == "__main__":
 
     rate = RateLimiter(frequency=100, warn=False)
 
-    for frame in read_skeleton_frames("data/standingtoT.txt"):
+    # for frame in read_skeleton_frames("data/standingtoT.txt"):
+    for frame in read_skeleton_frames_lcm("data/upper_body_track.log"):
+        print(frame, "\n\n\n\n\n!!!!!!!!!!!!!!!!!!!")
+
         if "Timestamp" not in frame:
             continue
 
