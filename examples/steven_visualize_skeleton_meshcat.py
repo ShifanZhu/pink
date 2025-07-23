@@ -149,6 +149,7 @@ if __name__ == "__main__":
     rate = RateLimiter(frequency=100, warn=False)
 
     for frame in read_skeleton_frames("data/standingtoT.txt"):
+    # for frame in read_skeleton_frames("data/skeleton1.txt"):
         if "Timestamp" not in frame:
             continue
 
