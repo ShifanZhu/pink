@@ -6,6 +6,8 @@
 
 """Upkie wheeled biped bending its knees."""
 
+import time
+
 import numpy as np
 import pinocchio as pin
 import qpsolvers
@@ -18,51 +20,9 @@ from pink.tasks import FrameTask, PostureTask
 from pink.utils import custom_configuration_vector
 from pink.visualization import start_meshcat_visualizer
 
-def read_skeleton_frames(filename):
-    frames = []
+import lcm
 
-    with open(filename, "r") as file:
-        frame = {}
-
-        for line in file:
-            line = line.replace(" ", "")
-            line = line.replace("\n", "")
-            label, data = line.split(":")
-            parts = data.split(",")
-
-            try:
-                # Timestamp is always the first entry in a frame
-                if label == "Timestamp":
-                    if frame != {}:
-                        frames.append(frame)
-
-                    frame = { label: int(parts[0]) }
-
-                else:
-                    frame[label] = [ float(p) for p in parts ]
-
-            except:
-                pass
-
-    return frames
-
-try:
-    from loop_rate_limiters import RateLimiter
-
-except ModuleNotFoundError as exc:
-    raise ModuleNotFoundError(
-        "Examples use loop rate limiters, "
-        "try `[conda|pip] install loop-rate-limiters`"
-    ) from exc
-
-try:
-    from robot_descriptions.loaders.pinocchio import load_robot_description
-
-except ModuleNotFoundError:
-    raise ModuleNotFoundError(
-        "Examples need robot_descriptions, "
-        "try `[conda|pip] install robot_descriptions`"
-    )
+from skeleton_lcm import skeleton_lcm
 
 link_map = {
     "PELVIS": "base",
@@ -90,7 +50,71 @@ link_map = {
     "FOOT_RIGHT": "RightToe",
 }
 
+joints = [
+    "PELVIS",
+    "SPINE_NAVEL",
+    "SPINE_CHEST",
+    "NECK",
+    "CLAVICLE_LEFT",
+    "SHOULDER_LEFT",
+    "ELBOW_LEFT",
+    "WRIST_LEFT",
+    "HAND_LEFT",
+    "HANDTIP_LEFT",
+    "THUMB_LEFT",
+    "CLAVICLE_RIGHT",
+    "SHOULDER_RIGHT",
+    "ELBOW_RIGHT",
+    "WRIST_RIGHT",
+    "HAND_RIGHT",
+    "HANDTIP_RIGHT",
+    "THUMB_RIGHT",
+    "HIP_LEFT",
+    "KNEE_LEFT",
+    "ANKLE_LEFT",
+    "FOOT_LEFT",
+    "HIP_RIGHT",
+    "KNEE_RIGHT",
+    "ANKLE_RIGHT",
+    "FOOT_RIGHT",
+    "HEAD",
+    "NOSE",
+    "EYE_LEFT",
+    "EAR_LEFT",
+    "EYE_RIGHT",
+    "EAR_RIGHT"
+]
+
+def get_skeleton_frame_from_msg(msg):
+    frame = {
+        joints[idx]: msg.joint_positions[idx] + msg.joint_orientations[idx]
+        for idx in range(len(joints))
+    }
+
+    frame["Timestamp"] = msg.id * 33333
+
+    return frame
+
+try:
+    from loop_rate_limiters import RateLimiter
+
+except ModuleNotFoundError as exc:
+    raise ModuleNotFoundError(
+        "Examples use loop rate limiters, "
+        "try `[conda|pip] install loop-rate-limiters`"
+    ) from exc
+
+try:
+    from robot_descriptions.loaders.pinocchio import load_robot_description
+
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(
+        "Examples need robot_descriptions, "
+        "try `[conda|pip] install robot_descriptions`"
+    )
+
 if __name__ == "__main__":
+    global last_timestamp
     last_timestamp = None
 
     robot = load_robot_description(
@@ -146,12 +170,14 @@ if __name__ == "__main__":
     if "daqp" in qpsolvers.available_solvers:
         solver = "daqp"
 
-    rate = RateLimiter(frequency=100, warn=False)
-
-    for frame in read_skeleton_frames("data/standingtoT.txt"):
-    # for frame in read_skeleton_frames("data/skeleton1.txt"):
+    def lcm_skeleton_handler(channel, data):
+        global last_timestamp
+        msg = skeleton_lcm.decode(data)
+        frame = get_skeleton_frame_from_msg(msg)
+        print("Received skeleton frame", frame)
+        
         if "Timestamp" not in frame:
-            continue
+            return
 
         # print(frame)
 
@@ -159,8 +185,10 @@ if __name__ == "__main__":
 
         if last_timestamp is None:
             last_timestamp = timestamp
+            return
 
         dt = (timestamp - last_timestamp) / 1e6
+        print(dt)
         last_timestamp = timestamp
 
         # print(frame)
@@ -176,11 +204,15 @@ if __name__ == "__main__":
         # Update visualization frames
         for joint, body in link_map.items():
             viewer[body + "_target"].set_transform(targets[joint].np)
+            # pass
         
         for body in link_map.values():
             viewer[body].set_transform(
                 configuration.get_transform_frame_to_world(body).np
             )
+            # pass
+
+        # print(configuration.q)
 
         # Compute velocity and integrate it into next configuration
         velocity = solve_ik(configuration, tasks.values(), dt, solver=solver)
@@ -188,6 +220,18 @@ if __name__ == "__main__":
 
         configuration.integrate_inplace(velocity, dt)
 
+        # print(configuration.q)
+
+        # exit(1)
+
         # Visualize result at fixed FPS
         viz.display(configuration.q)
-        rate.sleep()
+
+    lc = lcm.LCM()
+    lc.subscribe("SKELETON", lcm_skeleton_handler)
+
+    while True:
+        lc.handle()
+        time.sleep(0.01)
+
+    
