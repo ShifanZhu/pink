@@ -185,6 +185,21 @@ class Configuration:
                 continue
             if self.q[i] < q_min[i] - tol or self.q[i] > q_max[i] + tol:
                 if safety_break:
+                    joint_name = self.model.names[self.model.joints[i].id]
+                    print(
+                      f"Joint '{joint_name}' at index {i} is out of limits: value={self.q[i]}, range=[{q_min[i]}, {q_max[i]}]"
+                    )
+                    # for i in range(self.model.nq):
+                    #     if q_max[i] <= q_min[i] + tol:  # no limit
+                    #         continue
+                    #     joint_id = self.model.joints[i].id
+                    #     if 0 <= joint_id < len(self.model.names):
+                    #         joint_name = self.model.names[joint_id]
+                    #     else:
+                    #         print(f"Warning: joint_id={joint_id} out of range for i={i}, names_length={len(self.model.names)}")
+                    #         joint_name = f"INVALID_ID_{joint_id}"
+                    #     print(f"Joint index: {i}, name: {joint_name}")
+
                     raise NotWithinConfigurationLimits(
                         i,
                         self.q[i],

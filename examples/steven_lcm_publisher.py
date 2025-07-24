@@ -27,7 +27,12 @@ def read_skeleton_frames_lcm(filename):
     return list(frames.values())
 
 if __name__ == "__main__":
-    log = lcm.EventLog("data/upper_body_track.log", "r")
+    # log = lcm.EventLog("data/T_shape_for_scaling.log", "r")
+    log = lcm.EventLog("data/T_shape_for_scaling2.log", "r")
+    # log = lcm.EventLog("data/T_shape_parallel.log", "r")
+    # log = lcm.EventLog("data/T_shape.log", "r")
+    # log = lcm.EventLog("data/upper_body_track.log", "r")
+    # log = lcm.EventLog("data/lower_body_track.log", "r")
     lc = lcm.LCM()
     
     for i, event in enumerate(log):
@@ -35,4 +40,9 @@ if __name__ == "__main__":
         msg.id = i
         lc.publish("SKELETON", msg.encode())
         print("Sent frame", i)
-        time.sleep(0.033)
+        if (i == 1):
+            print("Sleeping for a long time to visualize the first frame")
+            time.sleep(1111110.033)
+            # time.sleep(0.033)
+        else:
+            time.sleep(0.003)
