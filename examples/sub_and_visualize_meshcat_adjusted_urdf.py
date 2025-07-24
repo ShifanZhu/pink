@@ -31,7 +31,7 @@ link_map = {
     # "SPINE_NAVEL": "TopLumbar",
     # "SPINE_CHEST": "Chest",
     "NECK": "Neck",
-    # "CLAVICLE_LEFT": "jChestLeftShoulder_rotx", # bad
+    # "CLAVICLE_LEFT": "jChestLeftShoulder_rotx", #! There seems no proper associated link in URDF
     # "SHOULDER_LEFT": "LeftUpperArm",
     # "ELBOW_LEFT": "LeftForeArm",
     "WRIST_LEFT": "LeftHand",
