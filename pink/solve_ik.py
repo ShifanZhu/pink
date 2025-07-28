@@ -262,6 +262,8 @@ def solve_ik(
     result = qpsolvers.solve_problem(problem, solver=solver, **kwargs)
     Delta_q = result.x
     if not result.found or Delta_q is None:
-        raise NoSolutionFound(problem, result)
+        print("No solution found for IK problem:", problem, ". Setting velocity to zero.")
+        Delta_q = configuration.tangent.zeros.copy()
+        # raise NoSolutionFound(problem, result)
     v: np.ndarray = Delta_q / dt
     return v

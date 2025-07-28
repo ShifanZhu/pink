@@ -27,7 +27,7 @@ from skeleton_lcm import skeleton_lcm
 from scipy.spatial.transform import Rotation as R
 
 link_map = {
-    "PELVIS": "base",
+    # "PELVIS": "base",
     # "SPINE_NAVEL": "TopLumbar",
     # "SPINE_CHEST": "Chest",
     "NECK": "Neck",
@@ -36,7 +36,7 @@ link_map = {
     # "ELBOW_LEFT": "LeftForeArm",
     "WRIST_LEFT": "LeftHand",
     # "HAND_LEFT": "LeftHandCOM",
-    # "HIP_LEFT": "LeftUpperLeg",
+    "HIP_LEFT": "LeftUpperLeg",
     # "KNEE_LEFT": "LeftLowerLeg",
     "ANKLE_LEFT": "LeftFoot",
     # "FOOT_LEFT": "LeftToe",
@@ -45,7 +45,7 @@ link_map = {
     # "ELBOW_RIGHT": "RightForeArm",
     "WRIST_RIGHT": "RightHand",
     # "HAND_RIGHT": "RightHandCOM",
-    # "HIP_RIGHT": "RightUpperLeg",
+    "HIP_RIGHT": "RightUpperLeg",
     # "KNEE_RIGHT": "RightLowerLeg",
     "ANKLE_RIGHT": "RightFoot",
     # "FOOT_RIGHT": "RightToe",
@@ -91,12 +91,12 @@ position_costs = {
     "PELVIS": 1.0,
     "SPINE_NAVEL": 0.8,
     "SPINE_CHEST": 0.8,
-    "NECK": 0.6,
+    "NECK": 0.1,
     "HEAD": 0.6,
     "CLAVICLE_LEFT": 0.5,
     "SHOULDER_LEFT": 1.0,
     "ELBOW_LEFT": 0.8,
-    "WRIST_LEFT": 0.6,
+    "WRIST_LEFT": 0.1,
     "HAND_LEFT": 0.4,
     "HIP_LEFT": 1.0,
     "KNEE_LEFT": 0.8,
@@ -108,9 +108,9 @@ position_costs = {
     "WRIST_RIGHT": 0.6,
     "HAND_RIGHT": 0.4,
     "HIP_RIGHT": 1.0,
-    "KNEE_RIGHT": 50.8,
-    "ANKLE_RIGHT": 50.6,
-    "FOOT_RIGHT": 50.4,
+    "KNEE_RIGHT": 0.8,
+    "ANKLE_RIGHT": 0.6,
+    "FOOT_RIGHT": 0.4,
 
     # You can skip or set 0.0 for unused/irrelevant joints
 }
@@ -223,7 +223,7 @@ if __name__ == "__main__":
     tasks = {
         joint: FrameTask(
             link_map[joint],
-            position_cost=1.0,
+            position_cost=position_costs[joint],
             orientation_cost=0.2,
         ) for joint in link_map.keys()
     }
